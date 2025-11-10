@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "sharath198/springboot-k8s-demo"
+        K8S_DEPLOYMENT = "springboot-k8s-demo"
+        K8S_NAMESPACE = "default"
+
+        // Hardcoded credentials as requested
+        DOCKER_USERNAME = "sharath198"
+        DOCKER_PASSWORD = "Sharath198"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/9182029380/docker-devops-training-kyd.git'
+            }
+        }
+
+        stage('Build & Package') {
+            steps {
+                bat "mvnw.cmd clean package -DskipTests || mvn clean package -DskipTests"
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat "docker build -t %DOCKER_IMAGE%:latest ."
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                bat "docker push %DOCKER_IMAGE%:latest"
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                bat """
+                kubectl apply -f deployment.yaml
+                kubectl apply -f service.yaml
+
+                kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_DEPLOYMENT%=%DOCKER_IMAGE%:latest --namespace=%K8S_NAMESPACE%
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment Successful!'
+        }
+        failure {
+            echo '❌ Deployment Failed!'
+        }
+    }
+}
