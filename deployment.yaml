@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: spring-boot-container
-          image: springboot-k8s-demo:latest
+          image: spring-boot-app:latest
           ports:
             - containerPort: 8080
           resources:
