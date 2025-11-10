@@ -45,13 +45,17 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat """
-                kubectl apply -f deployment.yaml
-                kubectl apply -f service.yaml
+        bat """
+        echo Applying Deployment YAML...
+        kubectl apply -f deployment.yaml
 
-                kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_DEPLOYMENT%=%DOCKER_IMAGE%:latest --namespace=%K8S_NAMESPACE%
-                """
-            }
+        echo Applying Service YAML...
+        kubectl apply -f service.yaml
+
+        echo Updating Deployment Image...
+        kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_DEPLOYMENT%=%DOCKER_IMAGE%:latest --namespace=%K8S_NAMESPACE%
+        """
+    }
         }
     }
 
